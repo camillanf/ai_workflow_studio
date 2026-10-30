@@ -1,0 +1,11 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"access_aiws_workflow_user","aiws.workflow user","model_aiws_workflow","base.group_user",1,0,0,0
+"access_aiws_workflow_editor","aiws.workflow editor","model_aiws_workflow","base.group_user",1,1,1,1
+"access_aiws_node_user","aiws.node user","model_aiws_node","base.group_user",1,0,0,0
+"access_aiws_node_editor","aiws.node editor","model_aiws_node","base.group_user",1,1,1,1
+"access_aiws_connection_user","aiws.connection user","model_aiws_connection","base.group_user",1,0,0,0
+"access_aiws_connection_editor","aiws.connection editor","model_aiws_connection","base.group_user",1,1,1,1
+"access_aiws_execution_user","aiws.execution user","model_aiws_execution","base.group_user",1,1,1,0
+"access_aiws_execution_log_user","aiws.execution_log user","model_aiws_execution_log","base.group_user",1,1,1,0
+"access_aiws_ai_provider_admin","aiws.ai_provider admin","model_aiws_ai_provider","base.group_system",1,1,1,1
+"access_aiws_ai_provider_user","aiws.ai_provider user","model_aiws_ai_provider","ai_workflow_studio.aiws_group_admin",1,1,1,1

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ===================================================================
+             LIST VIEW - Execution Logs
+             =================================================================== -->
+        <record id="aiws_execution_log_list" model="ir.ui.view">
+            <field name="name">aiws.execution_log list</field>
+            <field name="model">aiws.execution_log</field>
+            <field name="arch" type="xml">
+                <list string="Logs de ejecución">
+                    <field name="id"/>
+                    <field name="execution_id"/>
+                    <field name="node_id"/>
+                    <field name="node_type"/>
+                    <field name="state"/>
+                    <field name="error_message"/>
+                    <field name="duration_seconds"/>
+                    <field name="executed_at"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             SEARCH VIEW - Execution Logs
+             =================================================================== -->
+        <record id="aiws_execution_log_search" model="ir.ui.view">
+            <field name="name">aiws.execution_log search</field>
+            <field name="model">aiws.execution_log</field>
+            <field name="arch" type="xml">
+                <search string="Buscar logs de ejecución">
+                    <field name="node_type"/>
+                    <field name="state"/>
+                    <field name="executed_at"/>
+                    <filter string="Con error" name="error" domain="[('state','=','error')]"/>
+                    <filter string="Exitosos" name="done" domain="[('state','=','done')]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             ACCIÓN - Execution Logs
+             =================================================================== -->
+        <record id="action_aiws_execution_log" model="ir.actions.act_window">
+            <field name="name">Logs de ejecución</field>
+            <field name="res_model">aiws.execution_log</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="aiws_execution_log_search"/>
+            <field name="target">current</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Aquí puedes ver el historial detallado de cada nodo ejecutado.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ===================================================================
+             LIST VIEW - Executions
+             =================================================================== -->
+        <record id="aiws_execution_list" model="ir.ui.view">
+            <field name="name">aiws.execution list</field>
+            <field name="model">aiws.execution</field>
+            <field name="arch" type="xml">
+                <list string="Ejecuciones">
+                    <field name="id"/>
+                    <field name="workflow_id"/>
+                    <field name="state"/>
+                    <field name="started_at"/>
+                    <field name="duration_seconds"/>
+                    <field name="error_message"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             FORM VIEW - Execution
+             =================================================================== -->
+        <record id="aiws_execution_form" model="ir.ui.view">
+            <field name="name">aiws.execution form</field>
+            <field name="model">aiws.execution</field>
+            <field name="arch" type="xml">
+                <form string="Ejecución">
+                    <header>
+                        <button name="action_run" type="object" string="Reintentar" class="btn btn-primary" invisible="state != 'error'"/>
+                        <button name="action_run" type="object" string="Ejecutar de nuevo" class="btn btn-secondary" invisible="state == 'error'"/>
+                        <field name="state" widget="statusbar" statusbar_visible="running,done,error" readonly="1"/>
+                    </header>
+                    <sheet>
+                        <group string="Información de la ejecución" col="2">
+                            <field name="workflow_id" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                            <field name="started_at" readonly="1"/>
+                            <field name="duration_seconds" readonly="1"/>
+                            <field name="context" readonly="1"/>
+                            <field name="error_message" readonly="1"/>
+                        </group>
+
+                        <group string="Trazabilidad por nodo (logs)" col="1">
+                            <field name="log_ids" readonly="1">
+                                <list string="Pasos ejecutados">
+                                    <field name="node_id"/>
+                                    <field name="node_type"/>
+                                    <field name="state"/>
+                                    <field name="error_message"/>
+                                    <field name="duration_seconds"/>
+                                    <field name="executed_at"/>
+                                </list>
+                            </field>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             SEARCH VIEW - Executions
+             =================================================================== -->
+        <record id="aiws_execution_search" model="ir.ui.view">
+            <field name="name">aiws.execution search</field>
+            <field name="model">aiws.execution</field>
+            <field name="arch" type="xml">
+                <search string="Buscar ejecuciones">
+                    <field name="workflow_id"/>
+                    <field name="state"/>
+                    <field name="started_at"/>
+                    <filter string="Completadas" name="done" domain="[('state','=','done')]"/>
+                    <filter string="En ejecución" name="running" domain="[('state','=','running')]"/>
+                    <filter string="Con error" name="error" domain="[('state','=','error')]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             ACCIÓN - Executions
+             =================================================================== -->
+        <record id="action_aiws_execution" model="ir.actions.act_window">
+            <field name="name">Ejecuciones</field>
+            <field name="res_model">aiws.execution</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="aiws_execution_search"/>
+            <field name="target">current</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Aquí se registran todas las ejecuciones de tus workflows.
+                </p>
+                <p>
+                    Cada ejecución muestra su estado, duración y el trazado paso a paso
+                    de cada nodo ejecutado.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

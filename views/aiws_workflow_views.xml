@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ===================================================================
+             LIST VIEW - Workflows
+             =================================================================== -->
+        <record id="aiws_workflow_list" model="ir.ui.view">
+            <field name="name">aiws.workflow list</field>
+            <field name="model">aiws.workflow</field>
+            <field name="arch" type="xml">
+                <list string="Workflows">
+                    <field name="name"/>
+                    <field name="model" invisible="1"/>
+                    <field name="active" widget="boolean_button"/>
+                    <field name="is_trigger_enabled" widget="boolean_button"/>
+                    <field name="trigger_interval_minutes" invisible="1"/>
+                    <field name="company_id" invisible="1"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             KANBAN VIEW - Workflows (visual, tipo tarjetas)
+             =================================================================== -->
+        <record id="aiws_workflow_kanban" model="ir.ui.view">
+            <field name="name">aiws.workflow kanban</field>
+            <field name="model">aiws.workflow</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="active">
+                    <field name="name"/>
+                    <field name="active"/>
+                    <field name="model"/>
+                    <field name="is_trigger_enabled"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                                <div class="oe_kanban_content">
+                                    <strong class="oe_kanban_title">
+                                        <field name="name"/>
+                                    </strong>
+                                    <div class="oe_kanban_details">
+                                        <t t-if="record.active.raw_value">
+                                            <span class="badge badge-pill badge-success">Activo</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge badge-pill badge-danger">Inactivo</span>
+                                        </t>
+                                        <t t-if="record.is_trigger_enabled.raw_value">
+                                            <span class="badge badge-pill badge-info">Programado</span>
+                                        </t>
+                                        <field name="model" widget="text" invisible="1"/>
+                                    </div>
+                                    <div class="oe_kanban_footer">
+                                        <button type="object" name="action_open_editor" class="oe_kanban_button_small"
+                                                icon="fa-paint-brush" string="Editor visual"/>
+                                        <button type="object" name="action_run" class="oe_kanban_button_small"
+                                                icon="fa-play" string="Ejecutar"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             FORM VIEW - Workflow (organizado en grupos)
+             =================================================================== -->
+        <record id="aiws_workflow_form" model="ir.ui.view">
+            <field name="name">aiws.workflow form</field>
+            <field name="model">aiws.workflow</field>
+            <field name="arch" type="xml">
+                <form string="Workflow">
+                    <sheet>
+                        <!-- Título -->
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" class="o_data_name" placeholder="Nombre del workflow..."/>
+                            </h1>
+                        </div>
+
+                        <!-- Barra de acciones principales -->
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <button name="action_open_editor" type="object"
+                                    string="✎ Abrir editor visual"
+                                    class="btn btn-primary btn-lg"/>
+                            <button name="action_run" type="object"
+                                    string="▶ Ejecutar workflow"
+                                    class="btn btn-success btn-lg"/>
+                        </div>
+
+                        <!-- Datos principales -->
+                        <group string="Datos principales" col="2">
+                            <field name="name" placeholder="Ej. Aprobación de pedidos"/>
+                            <field name="model" placeholder="Ej. sale.order (vacío = global)"/>
+                            <field name="company_id"/>
+                            <field name="description" placeholder="Describe brevemente qué hace este workflow..." colspan="2"/>
+                        </group>
+
+                        <!-- Estado y programación -->
+                        <group string="Estado y programación" col="2">
+                            <field name="active" widget="boolean_button"
+                                   class="oe_inline" options='{"terminology": "active"}'/>
+                            <field name="is_trigger_enabled" widget="boolean_button"
+                                   class="oe_inline"/>
+                            <field name="trigger_interval_minutes"
+                                   placeholder="60" help="Minutos entre ejecuciones programadas"/>
+                        </group>
+
+                        <!-- Configuración Webhook -->
+                        <group string="Webhook (HMAC)" col="2" groups="ai_workflow_studio.aiws_group_admin">
+                            <field name="webhook_secret"
+                                   placeholder="Clave secreta para HMAC (opcional)"
+                                   help="Si se define, el webhook validará la firma X-AIWS-Signature con HMAC-SHA256"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             SEARCH VIEW - Workflows
+             =================================================================== -->
+        <record id="aiws_workflow_search" model="ir.ui.view">
+            <field name="name">aiws.workflow search</field>
+            <field name="model">aiws.workflow</field>
+            <field name="arch" type="xml">
+                <search string="Buscar workflows">
+                    <field name="name"/>
+                    <field name="model"/>
+                    <field name="active"/>
+                    <filter string="Activos" name="active_filter" domain="[('active','=',True)]"/>
+                    <filter string="Inactivos" name="inactive_filter" domain="[('active','=',False)]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             ACCIÓN - Workflows (kanban por defecto)
+             =================================================================== -->
+        <record id="action_aiws_workflow" model="ir.actions.act_window">
+            <field name="name">Workflows</field>
+            <field name="res_model">aiws.workflow</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="aiws_workflow_search"/>
+            <field name="target">current</field>
+            <field name="context">{"search_default_active_filter": 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crea tu primer flujo de trabajo visual haciendo clic en <b>Crear</b>.
+                </p>
+                <p>
+                    Desde la ficha del workflow podrás abrir el <b>editor visual</b>
+                    para diseñar nodos y conexiones, y luego ejecutarlo manualmente.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

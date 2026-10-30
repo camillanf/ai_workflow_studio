@@ -1,0 +1,162 @@
+================================================================================
+                      GUÍA DE USUARIO - AI WORKFLOW STUDIO
+================================================================================
+Módulo: ai_workflow_studio
+Versión: 19.0.1.0.0
+Odoo: 19.0 Community
+Licencia: LGPL-3
+
+--------------------------------------------------------------------------------
+1. ¿QUÉ ES AI WORKFLOW STUDIO?
+--------------------------------------------------------------------------------
+AI Workflow Studio es un módulo para Odoo 19 Community que permite diseñar,
+guardar y ejecutar flujos de trabajo (workflows) de forma VISUAL, sin escribir
+código. Funciona como un lienzo donde arrastras nodos (Inicio, Fin, Acción,
+Webhook, Correo, Agente IA, Condición) y los conectas para definir el orden
+de ejecución de tu automatización.
+
+Características principales:
+  - Editor visual OWL (sin librerías externas)
+  - Nodos: Start, End, Condition, Odoo Action, Webhook, Mail, Python Script, AI Agent
+  - Ejecución manual o programada (ir.cron)
+  - Historial de ejecuciones y trazabilidad paso a paso (logs por nodo)
+  - Proveedores de IA con API keys seguras (widget password, solo administradores)
+  - Límites de seguridad: 100 pasos, 300s totales, 30s por paso, 3 reintentos
+
+--------------------------------------------------------------------------------
+2. INSTALACIÓN Y ACCESO
+--------------------------------------------------------------------------------
+1. Instala el módulo desde Aplicaciones en Odoo (busca "AI Workflow Studio").
+2. Una vez instalado, aparece un nuevo menú principal: "AI Workflow Studio".
+3. Dentro del menú encontrarás:
+     - Workflows
+     - Ejecuciones
+     - Proveedores de IA
+4. Solo usuarios con el grupo correspondiente pueden crear/editar workflows.
+
+--------------------------------------------------------------------------------
+3. CREAR TU PRIMER WORKFLOW
+--------------------------------------------------------------------------------
+PASO A: Crear el flujo
+  1. Ve al menú AI Workflow Studio > Workflows.
+  2. Haz clic en "Crear".
+  3. Rellena los campos:
+        - Nombre: ej. "Notificación de factura aprobada"
+        - Descripción: explicación breve del flujo
+        - Modelo: el modelo de Odoo sobre el que actúa (ej. account.move)
+        - Activo: marca para habilitar el workflow
+  4. Guarda el registro.
+
+PASO B: Diseñar el grafo en el editor visual
+  1. Dentro de la ficha del workflow, haz clic en "✎ Abrir editor visual".
+     (Se abrirá en una pestaña nueva del navegador).
+  2. En el editor verás:
+        - Barra de herramientas: título, botón "Guardar grafo", botón "Cerrar".
+        - Paleta de nodos (izquierda): lista de tipos de nodo que puedes agregar.
+        - Lienzo central (SVG): donde diseñas el flujo.
+        - Panel de propiedades (derecha): aparece al seleccionar un nodo.
+  3. Agrega nodos haciendo clic en los botones de la paleta:
+        - Start: punto de entrada (obligatorio, exactamente uno).
+        - End: punto de finalización (al menos uno obligatorio).
+        - Condition: rama condicional.
+        - Odoo Action: acción sobre un modelo de Odoo.
+        - Webhook: llama a una URL externa.
+        - Mail: envía un correo electrónico.
+        - AI Agent: usa un proveedor de IA (stub en V1).
+  4. Conecta los nodos:
+        - Haz clic en un puerto (círculo de colores) de un nodo.
+        - Arrastra hasta el puerto de otro nodo para crear una conexión.
+        - Los puertos derecho son de salida, los izquierdo/arriba/abajo de entrada.
+  5. Configura cada nodo seleccionándolo y editando sus propiedades:
+        - Nombre, tipo, configuración (JSON).
+  6. Haz clic en "Guardar grafo" para persistir y validar el flujo.
+     El sistema verificará que haya un Start, al menos un End, y que no haya ciclos.
+
+PASO C: Ejecutar el workflow
+  1. Vuelve a la ficha del workflow en Odoo.
+  2. Haz clic en "▶ Ejecutar workflow".
+  3. Se creará una ejecución con estado "running".
+  4. El motor recorrerá los nodos en orden y dejará el resultado:
+        - "done" si todo salió bien.
+        - "error" si algo falló (ver el mensaje de error).
+
+--------------------------------------------------------------------------------
+4. VER EL HISTORIAL DE EJECUCIONES
+--------------------------------------------------------------------------------
+Ve al menú AI Workflow Studio > Ejecuciones. Aquí verás:
+  - Lista de todas las ejecuciones con su estado (done, running, error).
+  - Fecha de inicio y duración.
+  - Al abrir una ejecución, verás la trazabilidad paso a paso (logs por nodo):
+        * Tipo de nodo ejecutado
+        * Estado de cada paso
+        * Mensajes de error (si los hay)
+        * Duración de cada paso
+
+--------------------------------------------------------------------------------
+5. CONFIGURAR PROVEEDORES DE IA
+--------------------------------------------------------------------------------
+Ve al menú AI Workflow Studio > Proveedores de IA.
+
+  1. Haz clic en "Crear".
+  2. Rellena:
+        - Nombre: ej. "OpenAI GPT-4"
+        - Proveedor: openai, anthropic, etc.
+        - Modelo: ej. gpt-4
+        - Endpoint: URL de la API
+        - API Key: se guarda en widget de contraseña (oculta)
+  3. Solo usuarios administradores pueden ver/editar las API keys.
+  4. En V1, el nodo AI Agent usa un "stub" (respuesta simulada, sin red real).
+
+--------------------------------------------------------------------------------
+6. EJECUCIÓN PROGRAMADA (OPCIONAL)
+--------------------------------------------------------------------------------
+En la ficha del workflow, puedes activar:
+  - "Programado": para ejecutar el flujo automáticamente.
+  - "Intervalo (minutos):" cada cuánto tiempo se dispara.
+
+Esto crea una tarea programada (ir.cron) que ejecuta el workflow de forma
+autónoma según el intervalo definido.
+
+--------------------------------------------------------------------------------
+7. LÍMITES DE SEGURIDAD
+--------------------------------------------------------------------------------
+Para evitar procesos descontrolados, el motor impone:
+  - Máximo 100 pasos por ejecución.
+  - Máximo 300 segundos (5 minutos) por ejecución completa.
+  - Máximo 30 segundos por paso individual.
+  - Máximo 3 reintentos ante fallo.
+
+Si se excede algún límite, la ejecución se detiene con estado "error".
+
+--------------------------------------------------------------------------------
+8. SOLUCIÓN DE PROBLEMAS COMUNES
+--------------------------------------------------------------------------------
+PROBLEMA: El editor no carga / se queda en blanco.
+SOLUCIÓN: Abre la consola del navegador (F12) y revisa errores de JavaScript.
+          Asegúrate de que los archivos /aiws/static/owl.js y
+          /aiws/static/editor_standable.js devuelvan 200 OK.
+
+PROBLEMA: "Grafo inválido" al guardar.
+SOLUCIÓN: Revisa que haya exactamente un nodo Start y al menos un nodo End.
+          Verifica que no haya ciclos (conexiones que forman un bucle cerrado).
+
+PROBLEMA: La ejecución falla con error.
+SOLUCIÓN: Ve a AI Workflow Studio > Ejecuciones, abre la ejecución fallida
+          y revisa el campo "Mensaje de error" y los logs por nodo.
+
+PROBLEMA: No veo el menú AI Workflow Studio.
+SOLUCIÓN: Asegúrate de tener instalado el módulo y actualizado (-u).
+          Verifica que tu usuario tenga el grupo correspondiente.
+
+--------------------------------------------------------------------------------
+9. ROADMAP (V2 / V3)
+--------------------------------------------------------------------------------
+  - Nodo Python Script seguro (ejecución aislada).
+  - Proveedores de IA reales (OpenAI, Anthropic) con llamadas de red.
+  - Disparadores por evento (cuando se crea/modifica un registro).
+  - Marketplace de plantillas de workflows.
+  - Editor embebido dentro de Odoo (sin pestaña nueva).
+
+================================================================================
+                          FIN DE LA GUÍA
+================================================================================

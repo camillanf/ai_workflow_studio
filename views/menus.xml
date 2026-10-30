@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="menu_aiws_root" name="AI Workflow Studio"/>
+        <menuitem id="menu_aiws_workflows" name="Workflows" parent="menu_aiws_root" action="action_aiws_workflow"/>
+        <menuitem id="menu_aiws_executions" name="Executions" parent="menu_aiws_root" action="action_aiws_execution"/>
+        <menuitem id="menu_aiws_execution_logs" name="Execution Logs" parent="menu_aiws_root" action="action_aiws_execution_log"/>
+        <menuitem id="menu_aiws_providers" name="AI Providers" parent="menu_aiws_root" action="action_aiws_ai_provider"/>
+    </data>
+</odoo>

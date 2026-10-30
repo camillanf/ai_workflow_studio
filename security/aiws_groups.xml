@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="aiws_group_user" model="res.groups">
+            <field name="name">AIWS User</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="aiws_group_editor" model="res.groups">
+            <field name="name">AIWS Editor</field>
+            <field name="implied_ids" eval="[(4, ref('aiws_group_user'))]"/>
+        </record>
+        <record id="aiws_group_admin" model="res.groups">
+            <field name="name">AIWS Administrator</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_system'))]"/>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ===================================================================
+             LIST VIEW - AI Providers
+             =================================================================== -->
+        <record id="aiws_ai_provider_list" model="ir.ui.view">
+            <field name="name">aiws.ai_provider list</field>
+            <field name="model">aiws.ai_provider</field>
+            <field name="arch" type="xml">
+                <list string="Proveedores de IA">
+                    <field name="name"/>
+                    <field name="provider"/>
+                    <field name="model"/>
+                    <field name="active" widget="boolean_button"/>
+                    <field name="endpoint"/>
+                    <field name="company_id"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             FORM VIEW - AI Provider
+             =================================================================== -->
+        <record id="aiws_ai_provider_form" model="ir.ui.view">
+            <field name="name">aiws.ai_provider form</field>
+            <field name="model">aiws.ai_provider</field>
+            <field name="arch" type="xml">
+                <form string="Proveedor de IA">
+                    <sheet>
+                        <group string="Configuración del proveedor" col="2">
+                            <field name="name"/>
+                            <field name="provider"/>
+                            <field name="model"/>
+                            <field name="endpoint"/>
+                            <field name="api_key" widget="password"/>
+                            <field name="active" widget="boolean_button"/>
+                            <field name="company_id"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             SEARCH VIEW - AI Providers
+             =================================================================== -->
+        <record id="aiws_ai_provider_search" model="ir.ui.view">
+            <field name="name">aiws.ai_provider search</field>
+            <field name="model">aiws.ai_provider</field>
+            <field name="arch" type="xml">
+                <search string="Buscar proveedores de IA">
+                    <field name="name"/>
+                    <field name="provider"/>
+                    <field name="model"/>
+                    <field name="active"/>
+                    <filter string="Activos" name="active" domain="[('active','=',True)]"/>
+                    <filter string="Inactivos" name="inactive" domain="[('active','=',False)]"/>
+                </search>
+            </field>
+        </record>
+
+        <!-- ===================================================================
+             ACCIÓN - AI Providers
+             =================================================================== -->
+        <record id="action_aiws_ai_provider" model="ir.actions.act_window">
+            <field name="name">Proveedores de IA</field>
+            <field name="res_model">aiws.ai_provider</field>
+            <field name="view_mode">list,form</field>
+            <field name="search_view_id" ref="aiws_ai_provider_search"/>
+            <field name="target">current</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Define aquí tus proveedores de IA (como OpenAI, Anthropic, etc.).
+                </p>
+                <p>
+                    Las API keys se almacenan de forma segura usando el widget de contraseña
+                    y nunca se exponen en los logs.
+                </p>
+            </field>
+        </record>
+    </data>
+</odoo>

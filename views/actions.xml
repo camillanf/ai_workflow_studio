@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_aiws_workflow" model="ir.actions.act_window">
+            <field name="name">Workflows</field>
+            <field name="res_model">aiws.workflow</field>
+            <field name="view_mode">list,form</field>
+            <field name="target">current</field>
+        </record>
+        <record id="action_aiws_execution" model="ir.actions.act_window">
+            <field name="name">Executions</field>
+            <field name="res_model">aiws.execution</field>
+            <field name="view_mode">list,form</field>
+            <field name="target">current</field>
+        </record>
+        <record id="action_aiws_execution_log" model="ir.actions.act_window">
+            <field name="name">Execution Logs</field>
+            <field name="res_model">aiws.execution_log</field>
+            <field name="view_mode">list,form</field>
+            <field name="target">current</field>
+        </record>
+        <record id="action_aiws_ai_provider" model="ir.actions.act_window">
+            <field name="name">AI Providers</field>
+            <field name="res_model">aiws.ai_provider</field>
+            <field name="view_mode">list,form</field>
+            <field name="target">current</field>
+        </record>
+    </data>
+</odoo>

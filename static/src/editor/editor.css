@@ -1,0 +1,563 @@
+/* AI Workflow Studio Editor - Odoo Style
+ * Inspired by Odoo 19 design system
+ */
+
+:root {
+    /* Odoo 19 Color Palette */
+    --odoo-primary: #243742;
+    --odoo-primary-hover: #1a2a33;
+    --odoo-primary-light: #e8ecf0;
+    --odoo-secondary: #6c757d;
+    --odoo-secondary-hover: #5a6268;
+    --odoo-success: #1e7e34;
+    --odoo-success-hover: #155d27;
+    --odoo-danger: #c0392b;
+    --odoo-danger-hover: #a93226;
+    --odoo-warning: #f39c12;
+    --odoo-warning-hover: #e67e22;
+    --odoo-info: #17a2b8;
+    --odoo-info-hover: #138496;
+    --odoo-light: #f8f9fa;
+    --odoo-dark: #343a40;
+    --odoo-bg: #f0f2f5;
+    --odoo-bg-white: #ffffff;
+    --odoo-border: #dee2e6;
+    --odoo-border-strong: #ced4da;
+    --odoo-text: #212529;
+    --odoo-text-muted: #6c757d;
+    --odoo-shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --odoo-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    --odoo-shadow-lg: 0 4px 12px rgba(0,0,0,0.12);
+    --odoo-radius: 4px;
+    --odoo-radius-lg: 6px;
+    --odoo-transition: 0.15s ease;
+}
+
+/* Base */
+.aiws-editor {
+    display: flex;
+    height: 100vh;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--odoo-bg);
+    color: var(--odoo-text);
+}
+
+/* Toolbar - Odoo style */
+.aiws-toolbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--odoo-bg-white);
+    border-bottom: 1px solid var(--odoo-border);
+    box-shadow: var(--odoo-shadow-sm);
+    z-index: 10;
+}
+
+.aiws-toolbar h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--odoo-primary);
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Buttons - Odoo style */
+.oe_button,
+.aiws-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    border-radius: var(--odoo-radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--odoo-transition);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.oe_button:focus,
+.aiws-btn:focus {
+    outline: 2px solid var(--odoo-primary);
+    outline-offset: 2px;
+}
+
+.oe_button:disabled,
+.aiws-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Primary button - Odoo main action */
+.oe_button.oe_button-primary,
+.aiws-btn-primary {
+    background: var(--odoo-primary);
+    border-color: var(--odoo-primary);
+    color: #fff;
+}
+
+.oe_button.oe_button-primary:hover:not(:disabled),
+.aiws-btn-primary:hover:not(:disabled) {
+    background: var(--odoo-primary-hover);
+    border-color: var(--odoo-primary-hover);
+    color: #fff;
+}
+
+/* Secondary button */
+.oe_button.oe_button-secondary,
+.aiws-btn-secondary {
+    background: var(--odoo-bg-white);
+    border-color: var(--odoo-border-strong);
+    color: var(--odoo-text);
+}
+
+.oe_button.oe_button-secondary:hover:not(:disabled),
+.aiws-btn-secondary:hover:not(:disabled) {
+    background: var(--odoo-light);
+    border-color: var(--odoo-secondary);
+    color: var(--odoo-text);
+}
+
+/* Danger button */
+.oe_button.oe_button-danger,
+.aiws-btn-danger {
+    background: var(--odoo-danger);
+    border-color: var(--odoo-danger);
+    color: #fff;
+}
+
+.oe_button.oe_button-danger:hover:not(:disabled),
+.aiws-btn-danger:hover:not(:disabled) {
+    background: var(--odoo-danger-hover);
+    border-color: var(--odoo-danger-hover);
+    color: #fff;
+}
+
+/* Loading state for buttons */
+.aiws-btn-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.aiws-btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: aiws-spin 0.75s linear infinite;
+    color: inherit;
+}
+
+@keyframes aiws-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Toolbar specific buttons */
+.aiws-btn-save,
+.aiws-btn-close {
+    flex: 0 0 auto;
+    min-width: 100px;
+}
+
+/* Messages/Notifications - Toast style fixed bottom-right */
+.aiws-message {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: var(--odoo-radius);
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 1000;
+    box-shadow: var(--odoo-shadow-lg);
+    animation: aiws-toast-in 0.3s ease;
+    max-width: 350px;
+    word-wrap: break-word;
+}
+
+@keyframes aiws-toast-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.aiws-message.aiws-message-hiding {
+    animation: aiws-toast-out 0.2s ease forwards;
+}
+
+@keyframes aiws-toast-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(10px) scale(0.95); }
+}
+
+.aiws-message.aiws-message-error {
+    background: #fdf0f0;
+    color: var(--odoo-danger);
+    border: 1px solid #fadbd8;
+}
+
+.aiws-message.aiws-message-success {
+    background: #eafaf1;
+    color: var(--odoo-success);
+    border: 1px solid #d4edda;
+}
+
+.aiws-message.aiws-message-info {
+    background: var(--odoo-primary-light);
+    color: var(--odoo-primary);
+    border: 1px solid #d6dce4;
+}
+
+/* Palette - Left sidebar */
+.aiws-palette {
+    flex: 0 0 240px;
+    padding: 16px;
+    border-right: 1px solid var(--odoo-border);
+    overflow-y: auto;
+    background: var(--odoo-bg-white);
+}
+
+.aiws-palette h3 {
+    margin: 0 0 14px 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--odoo-text-muted);
+}
+
+.aiws-palette-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    margin: 4px 0;
+    text-align: left;
+    background: var(--odoo-bg-white);
+    border: 1px solid var(--odoo-border);
+    border-radius: var(--odoo-radius);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--odoo-text);
+    transition: all var(--odoo-transition);
+}
+
+.aiws-palette-btn:hover {
+    background: var(--odoo-primary-light);
+    border-color: var(--odoo-primary);
+    color: var(--odoo-primary);
+}
+
+.aiws-palette-btn:focus {
+    outline: 2px solid var(--odoo-primary);
+    outline-offset: 2px;
+}
+
+.aiws-palette-btn .aiws-node-type-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.aiws-hint {
+    margin-top: 16px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--odoo-text-muted);
+    background: var(--odoo-light);
+    border-radius: var(--odoo-radius);
+    border: 1px solid var(--odoo-border);
+    line-height: 1.5;
+}
+
+/* Canvas - Center area */
+.aiws-canvas-wrap {
+    flex: 1 1 auto;
+    overflow: auto;
+    position: relative;
+    background: var(--odoo-bg);
+}
+
+.aiws-canvas {
+    border: 1px solid var(--odoo-border);
+    background: var(--odoo-bg-white);
+    cursor: crosshair;
+    display: block;
+    width: 100%;
+    min-height: 600px;
+    border-radius: 0;
+}
+
+/* Grid pattern for canvas background */
+.aiws-canvas-wrap::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(var(--odoo-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--odoo-border) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
+}
+
+.aiws-canvas {
+    position: relative;
+    z-index: 1;
+}
+
+/* Nodes */
+.aiws-node {
+    cursor: move;
+}
+
+.aiws-node:hover {
+    filter: drop-shadow(var(--odoo-shadow));
+}
+
+.aiws-node text {
+    user-select: none;
+    font-family: inherit;
+}
+
+/* Selected node */
+.aiws-node.aiws-selected rect {
+    stroke: var(--odoo-primary) !important;
+    stroke-width: 2.5px !important;
+    filter: drop-shadow(var(--odoo-shadow));
+}
+
+/* Ports */
+.port {
+    transition: r var(--odoo-transition), stroke-width var(--odoo-transition);
+}
+
+.port:hover {
+    r: 8;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Connection buttons (info/delete in middle of line) */
+.conn-info-btn,
+.conn-delete-btn {
+    transition: r var(--odoo-transition), opacity var(--odoo-transition);
+}
+
+.conn-info-btn:hover,
+.conn-delete-btn:hover {
+    r: 10;
+    opacity: 1 !important;
+}
+
+/* Connection lines */
+.aiws-canvas line {
+    pointer-events: none;
+}
+
+.aiws-connection-line {
+    cursor: default; /* La línea no es clickeable; los botones centrales sí */
+}
+
+/* Temp connection line */
+.aiws-temp-connection {
+    pointer-events: none;
+}
+
+/* Delete connection button */
+.conn-delete-btn {
+    transition: r var(--odoo-transition), opacity var(--odoo-transition);
+}
+
+.conn-delete-btn:hover {
+    r: 10;
+    opacity: 1 !important;
+}
+
+/* Properties Panel - Right sidebar */
+.aiws-properties {
+    flex: 0 0 300px;
+    padding: 16px;
+    border-left: 1px solid var(--odoo-border);
+    overflow-y: auto;
+    background: var(--odoo-bg-white);
+}
+
+.aiws-properties h3 {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--odoo-text-muted);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--odoo-border);
+}
+
+.aiws-prop-row {
+    margin-bottom: 14px;
+}
+
+.aiws-prop-row label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--odoo-text);
+    margin-bottom: 6px;
+}
+
+.aiws-prop-row input.form-control,
+.aiws-prop-row textarea.form-control,
+.aiws-prop-row select.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--odoo-text);
+    background: var(--odoo-bg-white);
+    border: 1px solid var(--odoo-border-strong);
+    border-radius: var(--odoo-radius);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+    transition: border-color var(--odoo-transition), box-shadow var(--odoo-transition);
+    box-sizing: border-box;
+}
+
+.aiws-prop-row input.form-control:focus,
+.aiws-prop-row textarea.form-control:focus,
+.aiws-prop-row select.form-control:focus {
+    outline: none;
+    border-color: var(--odoo-primary);
+    box-shadow: 0 0 0 3px var(--odoo-primary-light);
+}
+
+.aiws-prop-row textarea.form-control {
+    min-height: 80px;
+    resize: vertical;
+    font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.aiws-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #fff;
+}
+
+/* Scrollbars */
+.aiws-palette::-webkit-scrollbar,
+.aiws-properties::-webkit-scrollbar,
+.aiws-canvas-wrap::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.aiws-palette::-webkit-scrollbar-track,
+.aiws-properties::-webkit-scrollbar-track,
+.aiws-canvas-wrap::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.aiws-palette::-webkit-scrollbar-thumb,
+.aiws-properties::-webkit-scrollbar-thumb,
+.aiws-canvas-wrap::-webkit-scrollbar-thumb {
+    background: var(--odoo-border-strong);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.aiws-palette::-webkit-scrollbar-thumb:hover,
+.aiws-properties::-webkit-scrollbar-thumb:hover,
+.aiws-canvas-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--odoo-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .aiws-palette { flex: 0 0 200px; }
+    .aiws-properties { flex: 0 0 260px; }
+}
+
+@media (max-width: 900px) {
+    .aiws-toolbar { flex-wrap: wrap; }
+    .aiws-toolbar h2 { order: -1; flex-basis: 100%; margin-bottom: 8px; }
+    .aiws-main { flex-direction: column; }
+    .aiws-palette { flex: 0 0 auto; max-height: 200px; border-right: none; border-bottom: 1px solid var(--odoo-border); }
+    .aiws-properties { flex: 0 0 auto; max-height: 200px; border-left: none; border-top: 1px solid var(--odoo-border); }
+    .aiws-canvas-wrap { min-height: 400px; }
+}
+
+/* Scrollbars refinadas */
+.aiws-palette::-webkit-scrollbar,
+.aiws-properties::-webkit-scrollbar,
+.aiws-canvas-wrap::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.aiws-palette::-webkit-scrollbar-track,
+.aiws-properties::-webkit-scrollbar-track,
+.aiws-canvas-wrap::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.aiws-palette::-webkit-scrollbar-thumb,
+.aiws-properties::-webkit-scrollbar-thumb,
+.aiws-canvas-wrap::-webkit-scrollbar-thumb {
+    background: var(--odoo-border-strong);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.aiws-palette::-webkit-scrollbar-thumb:hover,
+.aiws-properties::-webkit-scrollbar-thumb:hover,
+.aiws-canvas-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--odoo-secondary);
+}
+
+/* Firefox scrollbar */
+.aiws-palette,
+.aiws-properties,
+.aiws-canvas-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: var(--odoo-border-strong) transparent;
+}
+
+/* Focus visible para accesibilidad */
+.aiws-btn:focus-visible,
+.aiws-palette-btn:focus-visible,
+.aiws-prop-row input:focus-visible,
+.aiws-prop-row textarea:focus-visible {
+    outline: 2px solid var(--odoo-primary);
+    outline-offset: 2px;
+}
