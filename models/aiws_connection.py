@@ -21,6 +21,8 @@ class AiwsConnection(models.Model):
         ("true", "True"),
         ("false", "False"),
     ], string="Branch", help="For connections from a Condition node: True branch or False branch.")
+    source_side = fields.Char(string="Source Side", default="right")
+    target_side = fields.Char(string="Target Side", default="left")
     sequence = fields.Integer(string="Sequence", default=10)
     company_id = fields.Many2one(
         "res.company",

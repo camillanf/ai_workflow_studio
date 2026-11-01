@@ -56,9 +56,10 @@
 "        .aiws-canvas { display: block; background: #ffffff; cursor: crosshair; }\n" +
 "        .aiws-node { cursor: move; }\n" +
 "        .aiws-node.aiws-selected rect { stroke: #ff0000 !important; stroke-width: 3; }\n" +
-"        .port { cursor: crosshair; }\n" +
-"        .port:hover { r: 8; stroke-width: 2; }\n" +
 "        .aiws-temp-connection { stroke: #6c757d; stroke-width: 2; stroke-dasharray: 6 4; }\n" +
+"        .aiws-conn-marker { cursor: pointer; user-select: none; }\n" +
+"        .aiws-conn-marker.true { fill: #1e7e34; }\n" +
+"        .aiws-conn-marker.false { fill: #dc3545; }\n" +
 "        .aiws-properties { width: 320px; padding: 20px; overflow-y: auto; border-left: 1px solid #dee2e6; background: #f8f9fa; flex-shrink: 0; }\n" +
 "        .aiws-properties h3 { margin-top: 0; font-size: 16px; color: #495057; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }\n" +
 "        .aiws-properties h4 { font-size: 14px; color: #495057; margin: 16px 0 8px 0; }\n" +
@@ -116,14 +117,74 @@
         return map[type] || type;
     }
 
-    function portPosition(node, side) {
-        switch (side) {
-            case "top": return { x: node.x + NODE_WIDTH / 2, y: node.y };
-            case "bottom": return { x: node.x + NODE_WIDTH / 2, y: node.y + NODE_HEIGHT };
-            case "left": return { x: node.x, y: node.y + NODE_HEIGHT / 2 };
-            case "right": return { x: node.x + NODE_WIDTH, y: node.y + NODE_HEIGHT / 2 };
+    function nearestEdgePoint(node, tx, ty) {
+        // Devuelve el punto del borde del rectangulo del nodo mas cercano al punto (tx, ty)
+        var cx = node.x + NODE_WIDTH / 2;
+        var cy = node.y + NODE_HEIGHT / 2;
+        var dx = tx - cx;
+        var dy = ty - cy;
+        var ax = Math.abs(dx);
+        var ay = Math.abs(dy);
+        if (ax * NODE_HEIGHT > ay * NODE_WIDTH) {
+            if (dx > 0) {
+                return { x: node.x + NODE_WIDTH, y: Math.min(Math.max(ty, node.y), node.y + NODE_HEIGHT) };
+            } else {
+                return { x: node.x, y: Math.min(Math.max(ty, node.y), node.y + NODE_HEIGHT) };
+            }
+        } else {
+            if (dy > 0) {
+                return { x: Math.min(Math.max(tx, node.x), node.x + NODE_WIDTH), y: node.y + NODE_HEIGHT };
+            } else {
+                return { x: Math.min(Math.max(tx, node.x), node.x + NODE_WIDTH), y: node.y };
+            }
         }
-        return { x: node.x, y: node.y + NODE_HEIGHT / 2 };
+    }
+
+    function connectionPoints(sNode, tNode) {
+        // Devuelve los puntos de inicio y fin de una conexión entre dos nodos.
+        // Si hay solapamiento en el eje perpendicular (alineados lado a lado o uno sobre otro),
+        // la conexión es una línea recta horizontal o vertical en el punto medio del solapamiento.
+        // De lo contrario, usa nearestEdgePoint para ambos extremos.
+
+        var sRight = sNode.x + NODE_WIDTH;
+        var sBottom = sNode.y + NODE_HEIGHT;
+        var tRight = tNode.x + NODE_WIDTH;
+        var tBottom = tNode.y + NODE_HEIGHT;
+
+        // Solapamiento en Y (para conexión horizontal lado a lado)
+        var yOverlapStart = Math.max(sNode.y, tNode.y);
+        var yOverlapEnd = Math.min(sBottom, tBottom);
+        var yOverlap = yOverlapEnd - yOverlapStart;
+
+        // Solapamiento en X (para conexión vertical uno sobre otro)
+        var xOverlapStart = Math.max(sNode.x, tNode.x);
+        var xOverlapEnd = Math.min(sRight, tRight);
+        var xOverlap = xOverlapEnd - xOverlapStart;
+
+        // Nodos lado a lado (solapamiento en Y, sin solapamiento en X)
+        if (yOverlap > 0 && xOverlap <= 0) {
+            var yMid = yOverlapStart + yOverlap / 2;
+            if (sRight <= tNode.x) {
+                return { p1: { x: sRight, y: yMid }, p2: { x: tNode.x, y: yMid } };
+            } else {
+                return { p1: { x: sNode.x, y: yMid }, p2: { x: tRight, y: yMid } };
+            }
+        }
+
+        // Nodos uno sobre otro (solapamiento en X, sin solapamiento en Y)
+        if (xOverlap > 0 && yOverlap <= 0) {
+            var xMid = xOverlapStart + xOverlap / 2;
+            if (sBottom <= tNode.y) {
+                return { p1: { x: xMid, y: sBottom }, p2: { x: xMid, y: tNode.y } };
+            } else {
+                return { p1: { x: xMid, y: sNode.y }, p2: { x: xMid, y: tBottom } };
+            }
+        }
+
+        // Caso general: usar nearestEdgePoint para ambos extremos
+        var p1 = nearestEdgePoint(sNode, tNode.x + NODE_WIDTH / 2, tNode.y + NODE_HEIGHT / 2);
+        var p2 = nearestEdgePoint(tNode, sNode.x + NODE_WIDTH / 2, sNode.y + NODE_HEIGHT / 2);
+        return { p1: p1, p2: p2 };
     }
 
     // ====================================================================
@@ -141,6 +202,7 @@
         draggingConnection: false,
         mouseX: 0,
         mouseY: 0,
+        rightClickConnection: false,
     };
 
     // Arastre de nodo: { node, gEl, offsetX, offsetY, startX, startY, moved }
@@ -297,7 +359,7 @@
         if (state.connectionFrom) {
             var fromNode = state.nodes.find(function (n) { return n.id === state.connectionFrom.nodeId; });
             if (fromNode) {
-                var p1 = portPosition(fromNode, state.connectionFrom.side);
+                var p1 = nearestEdgePoint(fromNode, state.mouseX, state.mouseY);
                 var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("class", "aiws-temp-connection");
                 line.setAttribute("x1", p1.x); line.setAttribute("y1", p1.y);
@@ -313,8 +375,8 @@
             var sNode = state.nodes.find(function (n) { return n.id === conn.source; });
             var tNode = state.nodes.find(function (n) { return n.id === conn.target; });
             if (!sNode || !tNode) return;
-            var p1 = portPosition(sNode, "right");
-            var p2 = portPosition(tNode, "left");
+            var pts = connectionPoints(sNode, tNode);
+            var p1 = pts.p1, p2 = pts.p2;
             var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", p1.x); line.setAttribute("y1", p1.y);
             line.setAttribute("x2", p2.x); line.setAttribute("y2", p2.y);
@@ -322,14 +384,44 @@
             line.setAttribute("marker-end", "url(#aiws-arrow)");
             svg.appendChild(line);
 
-            if (conn.branch) {
-                var midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
-                var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", midX); text.setAttribute("y", midY);
-                text.setAttribute("text-anchor", "middle"); text.setAttribute("fill", "#666");
-                text.setAttribute("font-size", "11"); text.textContent = conn.branch;
-                svg.appendChild(text);
-            }
+            var isCondition = (sNode.node_type === "condition");
+            var midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
+            var markerColor = (isCondition && conn.branch === "true") ? "#1e7e34" : "#dc3545";
+            var markerText = (isCondition) ? ((conn.branch === "true") ? "v" : "f") : "x";
+
+            var markerGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            markerGroup.setAttribute("class", "aiws-conn-marker");
+            markerGroup.setAttribute("transform", "translate(" + midX + "," + midY + ")");
+
+            var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("r", "10");
+            circle.setAttribute("fill", markerColor);
+            circle.setAttribute("stroke", "#333");
+            circle.setAttribute("stroke-width", "1");
+
+            var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("text-anchor", "middle");
+            text.setAttribute("dominant-baseline", "middle");
+            text.setAttribute("font-size", "14");
+            text.setAttribute("font-weight", "bold");
+            text.setAttribute("fill", "#ffffff");
+            text.textContent = markerText;
+
+            markerGroup.appendChild(circle);
+            markerGroup.appendChild(text);
+
+            markerGroup.addEventListener("mousedown", function (ev) {
+                ev.stopPropagation();
+            });
+            markerGroup.addEventListener("click", function (ev) {
+                ev.stopPropagation();
+                if (isCondition) {
+                    selectConnection(conn);
+                } else {
+                    deleteConnection(conn.source, conn.target);
+                }
+            });
+            svg.appendChild(markerGroup);
         });
 
         // Nodos
@@ -345,7 +437,7 @@
             rect.setAttribute("x", node.x); rect.setAttribute("y", node.y);
             rect.setAttribute("width", NODE_WIDTH); rect.setAttribute("height", NODE_HEIGHT);
             rect.setAttribute("rx", "6"); rect.setAttribute("fill", "#ffffff");
-            rect.setAttribute("stroke", typeColor(node.node_type)); rect.setAttribute("stroke-width", "2");
+            rect.setAttribute("stroke", typeColor(node.node_type)); rect.setAttribute("stroke-width", "5");
             g.appendChild(rect);
 
             var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -356,22 +448,21 @@
             text.textContent = node.name;
             g.appendChild(text);
 
-            ["top", "bottom", "left", "right"].forEach(function (side) {
-                var p = portPosition(node, side);
-                var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("class", "port port-" + side);
-                circle.setAttribute("cx", p.x); circle.setAttribute("cy", p.y);
-                circle.setAttribute("r", "5"); circle.setAttribute("fill", typeColor(node.node_type));
-                circle.setAttribute("stroke", "#333"); circle.setAttribute("stroke-width", "1");
-                circle.style.cursor = "crosshair";
-                g.appendChild(circle);
-            });
-
             svg.appendChild(g);
         });
     }
 
     // ====================================================================
+    // ====================================================================
+    // Selección de conexión
+    // ====================================================================
+    function selectConnection(conn) {
+        state.selectedConnection = conn;
+        state.selectedNodeId = null;
+        render();
+        renderProperties();
+    }
+
     // Panel de propiedades
     // ====================================================================
     function renderProperties() {
@@ -383,8 +474,37 @@
         container.appendChild(h3);
 
         if (state.selectedConnection) {
-            var h3b = document.createElement("h3"); h3b.textContent = "Conexión";
-            container.appendChild(h3b);
+            var conn = state.selectedConnection;
+            var sNode = state.nodes.find(function (n) { return n.id === conn.source; });
+            var isCondition = sNode && sNode.node_type === "condition";
+
+            if (isCondition) {
+                var row = document.createElement("div"); row.className = "aiws-prop-row";
+                var label = document.createElement("label"); label.textContent = "Rama";
+                var select = document.createElement("select");
+                var optTrue = document.createElement("option"); optTrue.value = "true"; optTrue.textContent = "v  True";
+                var optFalse = document.createElement("option"); optFalse.value = "false"; optFalse.textContent = "f  False";
+                select.appendChild(optTrue); select.appendChild(optFalse);
+                select.value = conn.branch || "true";
+                select.addEventListener("change", function (ev) {
+                    ev.stopPropagation();
+                    conn.branch = ev.currentTarget.value;
+                    render();
+                    renderProperties();
+                });
+                row.appendChild(label); row.appendChild(select); container.appendChild(row);
+            }
+
+            var btnDel = document.createElement("button");
+            btnDel.className = "btn btn-danger"; btnDel.textContent = "Eliminar conexión";
+            btnDel.addEventListener("click", function (ev) {
+                ev.stopPropagation();
+                deleteConnection(conn.source, conn.target);
+                state.selectedConnection = null;
+                render();
+                renderProperties();
+            });
+            container.appendChild(btnDel);
             return;
         }
 
@@ -563,6 +683,12 @@
         if (state.connectionFrom && svg) {
             var tempLine = svg.querySelector(".aiws-temp-connection");
             if (tempLine) {
+                var fromNode = state.nodes.find(function (n) { return n.id === state.connectionFrom.nodeId; });
+                if (fromNode) {
+                    var p1 = nearestEdgePoint(fromNode, state.mouseX, state.mouseY);
+                    tempLine.setAttribute("x1", p1.x);
+                    tempLine.setAttribute("y1", p1.y);
+                }
                 tempLine.setAttribute("x2", state.mouseX);
                 tempLine.setAttribute("y2", state.mouseY);
             }
@@ -586,13 +712,6 @@
         if (r) { r.setAttribute("x", x); r.setAttribute("y", y); }
         var t = g.querySelector("text");
         if (t) { t.setAttribute("x", x + NODE_WIDTH / 2); t.setAttribute("y", y + NODE_HEIGHT / 2 + 5); }
-        var circles = g.querySelectorAll("circle");
-        if (circles.length >= 4) {
-            circles[0].setAttribute("cx", x + NODE_WIDTH / 2); circles[0].setAttribute("cy", y);
-            circles[1].setAttribute("cx", x + NODE_WIDTH / 2); circles[1].setAttribute("cy", y + NODE_HEIGHT);
-            circles[2].setAttribute("cx", x); circles[2].setAttribute("cy", y + NODE_HEIGHT / 2);
-            circles[3].setAttribute("cx", x + NODE_WIDTH); circles[3].setAttribute("cy", y + NODE_HEIGHT / 2);
-        }
     }
 
     function onWindowMouseMoveWrapper(ev) {
@@ -662,6 +781,7 @@
             }
             state.connectionFrom = null;
             state.draggingConnection = false;
+            state.rightClickConnection = false;
             render();
         }
     }
@@ -673,85 +793,82 @@
         var svg = $(".aiws-canvas");
         if (!svg) return;
 
+        // Prevenir menú contextual del navegador
+        svg.addEventListener("contextmenu", function (ev) {
+            ev.preventDefault();
+        });
+
         svg.addEventListener("mousedown", function (ev) {
-            // Puerta de conexión — iniciar creación de unión
-            var port = ev.target.closest ? ev.target.closest(".port") : null;
-            if (!port && ev.target && ev.target.classList) {
-                // fallback: walk parents
-                var el = ev.target;
-                while (el && el !== svg) {
-                    if (el.classList && el.classList.contains("port")) { port = el; break; }
-                    el = el.parentNode;
+            // Click derecho sobre nodo: iniciar creación de conexión
+            if (ev.button === 2) {
+                var gEl = ev.target.closest ? ev.target.closest(".aiws-node") : null;
+                if (!gEl && ev.target && ev.target.classList) {
+                    var el = ev.target;
+                    while (el && el !== svg) {
+                        if (el.classList && el.classList.contains("aiws-node")) { gEl = el; break; }
+                        el = el.parentNode;
+                    }
+                }
+                if (gEl) {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    var nodeId = parseFloat(gEl.dataset.id);
+                    state.connectionFrom = { nodeId: nodeId };
+                    state.rightClickConnection = true;
+                    state.draggingConnection = true;
+                    state.selectedNodeId = null;
+                    render();
+                    return;
                 }
             }
-            if (port) {
-                ev.stopPropagation();
-                ev.preventDefault();
-                var gEl = port.closest ? port.closest(".aiws-node") : null;
-                if (!gEl) {
-                    var el2 = port;
+
+            // Click izquierdo sobre nodo: seleccionar e iniciar arrastre (con umbral)
+            if (ev.button === 0) {
+                var gEl2 = ev.target.closest ? ev.target.closest(".aiws-node") : null;
+                if (!gEl2 && ev.target && ev.target.classList) {
+                    var el2 = ev.target;
                     while (el2 && el2 !== svg) {
-                        if (el2.classList && el2.classList.contains("aiws-node")) { gEl = el2; break; }
+                        if (el2.classList && el2.classList.contains("aiws-node")) { gEl2 = el2; break; }
                         el2 = el2.parentNode;
                     }
                 }
-                if (!gEl) return;
-                var nodeId = parseFloat(gEl.dataset.id);
-                var side = port.classList.contains("port-right") ? "right" :
-                           port.classList.contains("port-left") ? "left" :
-                           port.classList.contains("port-top") ? "top" : "bottom";
-                state.connectionFrom = { nodeId: nodeId, side: side };
-                state.draggingConnection = true;
-                state.selectedNodeId = null;
-                render();
-                return;
-            }
+                if (gEl2) {
+                    ev.stopPropagation();
+                    var nodeId = parseFloat(gEl2.dataset.id);
+                    var node = state.nodes.find(function (n) { return n.id === nodeId; });
+                    if (!node) return;
 
-            // Nodo: seleccionar e iniciar arrastre (con umbral)
-            var gEl = ev.target.closest ? ev.target.closest(".aiws-node") : null;
-            if (!gEl && ev.target && ev.target.classList) {
-                var el3 = ev.target;
-                while (el3 && el3 !== svg) {
-                    if (el3.classList && el3.classList.contains("aiws-node")) { gEl = el3; break; }
-                    el3 = el3.parentNode;
+                    var rect = svg.getBoundingClientRect();
+                    state.selectedNodeId = nodeId;
+                    state.selectedConnection = null;
+
+                    _drag = {
+                        node: node, gEl: gEl2,
+                        offsetX: ev.clientX - rect.left - node.x,
+                        offsetY: ev.clientY - rect.top - node.y,
+                        startX: ev.clientX, startY: ev.clientY,
+                        moved: false,
+                    };
+
+                    gEl2.style.opacity = "0.7";
+                    var r = gEl2.querySelector("rect");
+                    if (r) r.setAttribute("stroke", "#ff0000");
+
+                    renderProperties();
+                    ev.preventDefault();
+                    return;
                 }
-            }
-            if (gEl) {
-                ev.stopPropagation();
-                var nodeId = parseFloat(gEl.dataset.id);
-                var node = state.nodes.find(function (n) { return n.id === nodeId; });
-                if (!node) return;
-
-                var rect = svg.getBoundingClientRect();
-                state.selectedNodeId = nodeId;
-                state.selectedConnection = null;
-
-                _drag = {
-                    node: node, gEl: gEl,
-                    offsetX: ev.clientX - rect.left - node.x,
-                    offsetY: ev.clientY - rect.top - node.y,
-                    startX: ev.clientX, startY: ev.clientY,
-                    moved: false,
-                };
-
-                gEl.style.opacity = "0.7";
-                var r = gEl.querySelector("rect");
-                if (r) r.setAttribute("stroke", "#ff0000");
-
-                renderProperties();
-                ev.preventDefault();
             }
 
             // Fondo del canvas: deseleccionar
-            if (!gEl) {
-                state.selectedNodeId = null;
-                state.selectedConnection = null;
-                state.connectionFrom = null;
-                state.draggingConnection = false;
-                _drag = null;
-                render();
-                renderProperties();
-            }
+            state.selectedNodeId = null;
+            state.selectedConnection = null;
+            state.connectionFrom = null;
+            state.draggingConnection = false;
+            state.rightClickConnection = false;
+            _drag = null;
+            render();
+            renderProperties();
         });
     }
 

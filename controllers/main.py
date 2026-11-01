@@ -95,6 +95,8 @@ class AiwsController(http.Controller):
                     "label": conn_data.get("label") or "",
                     "condition": conn_data.get("condition") or "",
                     "branch": conn_data.get("branch") or False,
+                    "source_side": conn_data.get("source_side") or "right",
+                    "target_side": conn_data.get("target_side") or "left",
                     "sequence": int(conn_data.get("sequence") or 10),
                 }
             )
@@ -121,7 +123,7 @@ class AiwsController(http.Controller):
         )
         connections = request.env["aiws.connection"].search_read(
             [("workflow_id", "=", workflow_id)],
-            ["source_node_id", "target_node_id", "label", "condition", "branch", "sequence"],
+            ["source_node_id", "target_node_id", "label", "condition", "branch", "sequence", "source_side", "target_side"],
         )
         # Proveedores activos para el selector del nodo AI Agent.
         # Se leen con sudo y sin api_key: solo se expone nombre/tipo/modelo.
